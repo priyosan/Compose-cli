@@ -48,7 +48,7 @@ cross:
 	@GOOS=windows GOARCH=amd64 $(GO_BUILD) $(TAGS) -o $(BINARY)-windows-amd64.exe ./cli
 
 test:
-	@go test $(TAGS) -cover $(shell go list ./... | grep -vE 'e2e')
+	@go test -count=1 $(TAGS) -cover $(shell go list ./... | grep -vE 'e2e')
 
 lint:
 	golangci-lint run --timeout 10m0s ./...
