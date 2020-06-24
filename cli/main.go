@@ -85,7 +85,7 @@ func isOwnCommand(cmd *cobra.Command) bool {
 func main() {
 	var opts cliopts.GlobalOpts
 	root := &cobra.Command{
-		Use:           "docker",
+		Use:           "dockers",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
