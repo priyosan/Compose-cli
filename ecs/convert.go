@@ -26,8 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-
 	ecsapi "github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ecs"
@@ -48,15 +46,6 @@ func (b *ecsAPIService) createTaskExecution(project *types.Project, service type
 	_, memReservation := toContainerReservation(service)
 	credential := getRepoCredentials(service)
 
-	// override resolve.conf search directive to also search <project>.local
-	// TODO remove once ECS support hostname-only service discovery
-	service.Environment["LOCALDOMAIN"] = aws.String(
-		cloudformation.Join("", []string{
-			cloudformation.Ref("AWS::Region"),
-			".compute.internal",
-			fmt.Sprintf(" %s.local", project.Name),
-		}))
-
 	logConfiguration := getLogConfiguration(service, project)
 
 	var (
@@ -73,6 +62,13 @@ func (b *ecsAPIService) createTaskExecution(project *types.Project, service type
 		volumes = append(volumes, secretsVolume)
 		mounts = append(mounts, secretsMount)
 	}
+
+	initContainers = append(initContainers, ecs.TaskDefinition_ContainerDefinition{
+		Name:      fmt.Sprintf("%s_ResolvConf_InitContainer", normalizeResourceName(service.Name)),
+		Image:     "alpine",
+		Essential: false,
+		Command:   []string{"/bin/sh", "-c", fmt.Sprintf("echo search %s.compute.internal %s.local >> /etc/resolv.conf", b.Region, project.Name)},
+	})
 
 	var dependencies []ecs.TaskDefinition_ContainerDependency
 	for _, c := range initContainers {
