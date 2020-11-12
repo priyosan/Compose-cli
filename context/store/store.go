@@ -45,6 +45,9 @@ const (
 	// backend
 	EcsContextType = "ecs"
 
+	// SwarmContextType is the endpoint key in the context endpoints for a docker swarm backend
+	SwarmContextType = "swarm"
+
 	// EcsLocalSimulationContextType is the endpoint key in the context endpoints for an ECS backend
 	// running local simulation endpoints
 	EcsLocalSimulationContextType = "ecs-local"

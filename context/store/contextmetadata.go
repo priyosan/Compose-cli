@@ -61,6 +61,11 @@ type AwsContext EcsContext
 // LocalContext is the context for the local backend
 type LocalContext struct{}
 
+// SwarmContext is the context for the swarm backend
+type SwarmContext struct{
+	Location       string `json:",omitempty"`
+}
+
 // ExampleContext is the context for the example backend
 type ExampleContext struct{}
 
