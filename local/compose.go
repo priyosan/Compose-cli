@@ -49,6 +49,11 @@ import (
 	"github.com/docker/compose-cli/progress"
 )
 
+func (s *local) Build(ctx context.Context, project *types.Project) error {
+	fmt.Println("building")
+	return nil
+}
+
 func (s *local) Up(ctx context.Context, project *types.Project, detach bool) error {
 	for k, network := range project.Networks {
 		if !network.External.External && network.Name != "" {

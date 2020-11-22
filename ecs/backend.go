@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/compose-spec/compose-go/types"
 	"github.com/docker/compose-cli/api/compose"
 	"github.com/docker/compose-cli/api/containers"
 	"github.com/docker/compose-cli/api/resources"
@@ -138,6 +139,10 @@ func (b *ecsAPIService) VolumeService() volumes.Service {
 
 func (b *ecsAPIService) ResourceService() resources.Service {
 	return nil
+}
+
+func (cs *ecsAPIService) Build(ctx context.Context, project *types.Project) error {
+	return errdefs.ErrNotImplemented
 }
 
 func getCloudService() (cloud.Service, error) {

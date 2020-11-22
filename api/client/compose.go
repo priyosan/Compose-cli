@@ -29,6 +29,11 @@ import (
 type composeService struct {
 }
 
+// Buid executes the equivalent to a `compose build`
+func (c *composeService) Build(context.Context, *types.Project) error {
+	return errdefs.ErrNotImplemented
+}
+
 // Up executes the equivalent to a `compose up`
 func (c *composeService) Up(context.Context, *types.Project, bool) error {
 	return errdefs.ErrNotImplemented

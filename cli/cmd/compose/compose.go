@@ -20,9 +20,8 @@ import (
 	"context"
 
 	"github.com/compose-spec/compose-go/cli"
-	"github.com/spf13/pflag"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/docker/compose-cli/api/client"
 	"github.com/docker/compose-cli/errdefs"
@@ -81,6 +80,7 @@ func Command(contextType string) *cobra.Command {
 	}
 
 	command.AddCommand(
+		buildCommand(),
 		upCommand(contextType),
 		downCommand(),
 		psCommand(),
