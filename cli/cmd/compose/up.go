@@ -147,5 +147,6 @@ func setup(ctx context.Context, opts composeOptions, services []string) (*client
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return c, project, nil
 }

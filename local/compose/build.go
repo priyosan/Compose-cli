@@ -138,11 +138,15 @@ func (s *composeService) toBuildOptions(service types.ServiceConfig, contextPath
 		service.Build.Dockerfile = "Dockerfile"
 	}
 	var buildArgs map[string]string
+	dockerfile := service.Build.Dockerfile
+	if !path.IsAbs(dockerfile) {
+		dockerfile= path.Join(contextPath, service.Build.Context, service.Build.Dockerfile)
+	}
 
 	return build.Options{
 		Inputs: build.Inputs{
 			ContextPath:    path.Join(contextPath, service.Build.Context),
-			DockerfilePath: path.Join(contextPath, service.Build.Context, service.Build.Dockerfile),
+			DockerfilePath: dockerfile,
 		},
 		BuildArgs: flatten(mergeArgs(service.Build.Args, buildArgs)),
 		Tags:      tags,

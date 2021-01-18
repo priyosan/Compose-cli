@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/docker/compose-cli/local/lambdas"
 	"strings"
 
 	"github.com/docker/compose-cli/api/compose"
@@ -56,6 +57,8 @@ func getCanonicalContainerName(c moby.Container) string {
 }
 
 func (s *composeService) Convert(ctx context.Context, project *types.Project, options compose.ConvertOptions) ([]byte, error) {
+	lambdas.TransformForLambdas(project)
+
 	switch options.Format {
 	case "json":
 		return json.MarshalIndent(project, "", "  ")

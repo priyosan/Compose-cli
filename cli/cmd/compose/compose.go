@@ -19,6 +19,8 @@ package compose
 import (
 	"fmt"
 
+	"github.com/docker/compose-cli/api/lambdas"
+
 	"github.com/compose-spec/compose-go/cli"
 	"github.com/compose-spec/compose-go/types"
 	"github.com/spf13/cobra"
@@ -64,6 +66,17 @@ func (o *projectOptions) toProject() (*types.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	err = lambdas.LoadQueues(project)
+	if err != nil {
+		return nil, err
+	}
+
+	err = lambdas.LoadFunctions(project)
+	if err != nil {
+		return nil, err
+	}
+
 	return project, nil
 }
 
