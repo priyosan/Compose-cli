@@ -92,6 +92,8 @@ func (s *composeService) Create(ctx context.Context, project *types.Project, opt
 		}
 	}
 
+	prepareNetworkMode(project)
+
 	return InDependencyOrder(ctx, project, func(c context.Context, service types.ServiceConfig) error {
 		return s.ensureService(c, observedState, project, service, opts.Recreate)
 	})
@@ -126,6 +128,27 @@ func prepareNetworks(project *types.Project) {
 		network.Labels = network.Labels.Add(projectLabel, project.Name)
 		network.Labels = network.Labels.Add(versionLabel, ComposeVersion)
 		project.Networks[k] = network
+	}
+}
+
+func prepareNetworkMode(p *types.Project) {
+outLoop:
+	for i := range p.Services {
+		dependency := getDependentServiceByNetwork(p.Services[i].NetworkMode)
+		if dependency == "" {
+			continue
+		}
+		if p.Services[i].DependsOn == nil {
+			p.Services[i].DependsOn = make(types.DependsOnConfig)
+		}
+		for _, service := range p.Services {
+			if service.Name == dependency {
+				p.Services[i].DependsOn[service.Name] = types.ServiceDependency{
+					Condition: types.ServiceConditionStarted,
+				}
+				continue outLoop
+			}
+		}
 	}
 }
 
@@ -235,7 +258,29 @@ func (s *composeService) getCreateOptions(ctx context.Context, p *types.Project,
 	portBindings := buildContainerPortBindingOptions(service)
 
 	resources := getDeployResources(service)
-	networkMode := getNetworkMode(p, service)
+
+	var depServiceContainers []moby.Container
+	depServiceNetworkMode := getDependentServiceByNetwork(service.NetworkMode)
+	if depServiceNetworkMode != "" {
+		depServiceContainers, err = s.apiClient.ContainerList(ctx, moby.ContainerListOptions{
+			Filters: filters.NewArgs(
+				projectFilter(p.Name),
+				serviceFilter(depServiceNetworkMode),
+			),
+			All: true,
+		})
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+	var depFirstContainer *moby.Container
+	if len(depServiceContainers) > 0 {
+		depFirstContainer = &depServiceContainers[0]
+	}
+	networkMode, err := getNetworkMode(ctx, p, service, depFirstContainer)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	hostConfig := container.HostConfig{
 		AutoRemove:     autoRemove,
 		Binds:          binds,
@@ -333,6 +378,14 @@ func getVolumesFrom(project *types.Project, volumesFrom []string) ([]string, []s
 	}
 	return volumes, services, nil
 
+}
+
+func getDependentServiceByNetwork(networkMode string) string {
+	baseService := ""
+	if strings.HasPrefix(networkMode, "service:") {
+		return networkMode[len("service:"):]
+	}
+	return baseService
 }
 
 func (s *composeService) buildContainerVolumes(ctx context.Context, p types.Project, service types.ServiceConfig,
@@ -602,31 +655,33 @@ func getAliases(s types.ServiceConfig, c *types.ServiceNetworkConfig) []string {
 	return aliases
 }
 
-func getNetworkMode(p *types.Project, service types.ServiceConfig) container.NetworkMode {
+func getNetworkMode(ctx context.Context, p *types.Project, service types.ServiceConfig, depFirstContainer *moby.Container) (container.NetworkMode, error) {
 	mode := service.NetworkMode
 	if mode == "" {
 		if len(p.Networks) > 0 {
 			for name := range getNetworksForService(service) {
-				return container.NetworkMode(p.Networks[name].Name)
+				return container.NetworkMode(p.Networks[name].Name), nil
 			}
 		}
-		return container.NetworkMode("none")
+		return container.NetworkMode("none"), nil
 	}
-
-	// FIXME incomplete implementation
-	if strings.HasPrefix(mode, "service:") {
-		panic("Not yet implemented")
+	if getDependentServiceByNetwork(mode) != "" {
+		if depFirstContainer == nil {
+			return container.NetworkMode("none"),
+				fmt.Errorf(`no containers started for service %q to get reference of network mode "service:%s"`,
+					service.Name, service.Name)
+		}
+		return container.NetworkMode("container:" + depFirstContainer.ID), nil
 	}
-	if strings.HasPrefix(mode, "container:") {
-		panic("Not yet implemented")
-	}
-
-	return container.NetworkMode(mode)
+	return container.NetworkMode(mode), nil
 }
 
 func getNetworksForService(s types.ServiceConfig) map[string]*types.ServiceNetworkConfig {
 	if len(s.Networks) > 0 {
 		return s.Networks
+	}
+	if s.NetworkMode != "" {
+		return nil
 	}
 	return map[string]*types.ServiceNetworkConfig{"default": nil}
 }
