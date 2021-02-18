@@ -74,6 +74,8 @@ replace (
 	// we need to create a new release tag for docker/distribution
 	github.com/docker/distribution => github.com/docker/distribution v0.0.0-20200708230824-53e18a9d9bfe
 
+	github.com/imdario/mergo => github.com/ndeloof/mergo v0.3.12-0.20210218122504-d9327391918d
+
 	// (for buildx)
 	github.com/jaguilar/vt100 => github.com/tonistiigi/vt100 v0.0.0-20190402012908-ad4c4a574305
 )
