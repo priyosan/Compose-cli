@@ -32,6 +32,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/docker/cli/cli"
 	"github.com/docker/compose-cli/api/backend"
 	"github.com/docker/compose-cli/api/config"
 	apicontext "github.com/docker/compose-cli/api/context"
@@ -263,9 +264,9 @@ $ docker context create %s <name>`, cc.Type(), store.EcsContextType), ctype)
 }
 
 func exit(ctx string, err error, ctype string) {
-	if exit, ok := err.(cmd.ExitCodeError); ok {
+	if exit, ok := err.(cli.StatusError); ok {
 		metrics.Track(ctype, os.Args[1:], metrics.SuccessStatus)
-		os.Exit(exit.ExitCode)
+		os.Exit(exit.StatusCode)
 	}
 
 	metrics.Track(ctype, os.Args[1:], metrics.FailureStatus)

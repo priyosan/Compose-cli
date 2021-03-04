@@ -32,11 +32,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/docker/cli/cli"
 	"github.com/docker/compose-cli/api/client"
 	"github.com/docker/compose-cli/api/compose"
 	"github.com/docker/compose-cli/api/context/store"
 	"github.com/docker/compose-cli/api/progress"
-	"github.com/docker/compose-cli/cli/cmd"
 	"github.com/docker/compose-cli/cli/formatter"
 )
 
@@ -313,7 +313,7 @@ func runCreateStart(ctx context.Context, opts upOptions, services []string) erro
 
 	err = eg.Wait()
 	if exitCode != 0 {
-		return cmd.ExitCodeError{ExitCode: exitCode}
+		return cli.StatusError{StatusCode: exitCode}
 	}
 	return err
 }
