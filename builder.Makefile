@@ -34,6 +34,9 @@ GO_BUILD=$(STATIC_FLAGS) go build -trimpath -ldflags=$(LDFLAGS)
 BINARY?=bin/docker
 BINARY_WITH_EXTENSION=$(BINARY)$(EXTENSION)
 
+COMPOSE_BINARY?=bin/docker-compose
+COMPOSE_BINARY_WITH_EXTENSION=$(COMPOSE_BINARY)$(EXTENSION)
+
 WORK_DIR:=$(shell mktemp -d)
 
 TAGS:=
@@ -59,7 +62,7 @@ cli:
 
 .PHONY: cli
 compose-plugin:
-	GOOS=${GOOS} GOARCH=${GOARCH} $(GO_BUILD) $(TAGS) -o ./bin/docker-compose ./compose_plugin
+	GOOS=${GOOS} GOARCH=${GOARCH} $(GO_BUILD) $(TAGS) -o $(COMPOSE_BINARY_WITH_EXTENSION) ./compose_plugin
 
 .PHONY: cross
 cross:
