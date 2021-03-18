@@ -107,6 +107,14 @@ func Command(contextType string) *cobra.Command {
 		Use:              "compose",
 		TraverseChildren: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			parent := cmd.Root()
+			parentPrerun := parent.PersistentPreRunE
+			if parentPrerun != nil {
+				err := parentPrerun(cmd, args)
+				if err != nil {
+					return err
+				}
+			}
 			formatter.SetANSIMode(ansi)
 			if opts.WorkDir != "" {
 				if opts.ProjectDir != "" {
